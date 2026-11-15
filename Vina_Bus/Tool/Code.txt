@@ -1,0 +1,2 @@
+cd data (set vị trí file txt trả về)
+py "D:\WEB\.ádasdafasf\Tool\a.py" walk.osm bus.osm  ( code python chạy lấy dữ liệu)
