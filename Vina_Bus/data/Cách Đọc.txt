@@ -1,0 +1,31 @@
+javascript đọc A..DườngĐiXeBus.txt  
+				tuyến -- id_trạm_bắt_đầu -- id_trạm_kế_tiếp -- K node đường đi qua .  K dòng tiếp theo là tọa độ đường đi
+				sau khi di qua hết  thì tiếp qua cái tiếp theo
+
+javascript đọc A..CácTuyếnXeBus.txt
+	đọc để hiển thị tên của trạm và tuyến trên map
+
+
+C++dđọc MapNode
+dòng đầu là số node / cạnh
+từ 1 đến n+1 là các node  id -- kinh độ -- vĩ độ -- loại (0 là đg bộ / 1 là trạm xe bus)
+
+từ n+2 đến hết là các cạnh . đỉnh đầu -- đỉnh cuối -- trọng số -- phân loại (0 là đường bộ / 1 là trạm ) -- nếu là dg bộ thì -1, còn không là id tuyến
+13626 13638 366.85   1	  0     (tuyến 109) 
+đỉnh1 đỉnh2 length loại  tuyến 
+
+câu hỏi , nếu chỉ cần lấy dc id node từ thuật toán là được vậy thì cần quan tâm phân loại cạnh làm gì ... và không phải từ đầu quyến định xe bus chỉ đi trên dg của nó thôi hay sao.
+
+
+1. Cột cho biết tuyến xe bus giúp ta biết khi nào Ta đổi tuyến do cơ chế file kq là:
+ketqua.txt
+
+Line 1 : -1 các node đường bộ đi đến trạm xe bus gần nhất (với -1 cho biết là đường bộ)
+Line 2 : id tuyến, các node đường xe bus đi (các node giao thông để vẽ lên bản đồ) , Nếu có sự thay 
+
+nếu có đổi tuyến : id tuyến 2 , các node đường xe bus đi (các node giao thông để vẽ lên bản đồ) . Sau đó in ra đường đi bộ đến đích
+nếu không thì : -1 các node đường bộ đi đến đích
+==>Biết đoạn nào đi bộ, đoạn nào ngồi xe, và đổi xe ở đâu.
+==>Tra được khối trong file đường bus để vẽ nét xanh bám đường.
+
+2. Câu này lại nhắc đến cách di chuyển, với 0 là đi bộ và 1 là bus, cho ta biết đã đến trạm, ta đầu thể nào đến 1 node đường đi của bus r leo lên

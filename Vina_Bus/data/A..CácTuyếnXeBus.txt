@@ -1,0 +1,97 @@
+0	109	Bến xe Sài Gòn - Sân bay Tân Sơn Nhất
+1	01	Ga Ba Son - Bến xe Chợ Lớn
+2	01	Bến xe Chợ Lớn - Ga Ba Son
+3	03	Bến Thành - Thạnh Xuân
+4	03	Thạnh Xuân - Bến Thành
+5	04	Bến Thành - Cộng Hòa - Bến xe An Sương
+6	04	Bến xe An Sương - Cộng Hòa - Bến Thành
+7	05	Bến xe Chợ Lớn - Bến xe Biên Hòa
+8	05	Bến xe Biên Hòa - Bến xe Chợ Lớn
+9	06	Bến xe Chợ Lớn – Đại học Nông Lâm
+10	06	Đại học Nông Lâm - Bến xe Chợ Lớn
+11	10	Đại học Quốc gia - Bến xe Miền Tây
+12	10	Bến xe Miền Tây - Đại học Quốc gia
+13	13	Bến xe Sài Gòn - Bến xe Củ Chi
+14	13	Bến xe Củ Chi - Bến xe Sài Gòn
+15	14	Bến xe Miền Đông - Bến xe Miền Tây
+16	14	Bến xe Miền Tây - Bến xe Miền Đông
+17	18	Bến Thành - Chợ Hiệp Thành
+18	18	Chợ Hiệp Thành - Bến Thành
+19	19	Bến xe Sài Gòn - Khu chế xuất Linh Trung - Đại học Quốc gia
+20	19	Đại học Quốc gia - Khu chế xuất Linh Trung - Bến xe Sài Gòn
+21	20	Bến Thành - Nhà Bè
+22	20	Nhà Bè - Bến Thành
+23	27	Bến xe Sài Gòn - Âu Cơ - Bến xe An Sương
+24	27	Bến xe An Sương - Âu Cơ - Bến xe Sài Gòn
+25	28	Bến xe Sài Gòn - Chợ Xuân Thới Thượng
+26	28	Chợ Xuân Thới Thượng - Bến xe Sài Gòn
+27	30	Chợ Tân Hương - Bến xe buýt Văn Thánh
+28	30	Bến xe buýt Văn Thánh - Chợ Tân Hương
+29	31	Đại học Tôn Đức Thắng - Bến Thành - Đại học Văn Lang
+30	31	Đại học Văn Lang - Bến Thành - Đại học Tôn Đức Thắng
+31	34	Bến xe Sài Gòn - Bến xe Quận 8
+32	34	Bến xe Quận 8 - Bến xe Sài Gòn
+33	36	Bến Thành - Thới An
+34	36	Thới An - Bến Thành
+35	38	Khu dân cư Tân Quy - Bến Thành - Đầm Sen
+36	38	Đầm Sen - Bến Thành - Khu dân cư Tân Quy
+37	39	Bến Thành - Võ Văn Kiệt - Bến xe Miền Tây
+38	39	Bến xe Miền Tây - Võ Văn Kiệt - Bến Thành
+39	44	Cảng Quận 4 - Bình Quới
+40	44	Bình Quới - Cảng Quận 4
+41	45	Đại học Kinh tế - Bến Thành - Bến xe Miền Đông
+42	45	Bến xe Miền Đông - Bến Thành - Đại học Kinh tế
+43	46	Công viên Tôn Thất Thuyết - Bến Mễ Cốc
+44	46	Bến Mễ Cốc - Công viên Tôn Thất Thuyết
+45	52	Bến Thành - Đại học Quốc gia
+46	52	Đại học Quốc gia - Bến Thành
+47	53	Lê Hồng Phong - Đại học Quốc gia
+48	53	Đại học Quốc gia - Lê Hồng Phong
+49	56	Bến xe Chợ Lớn - Bến xe Miền Đông mới
+50	56	Bến xe Miền Đông mới - Bến xe Chợ Lớn
+51	65	Bến Thành - Cách mạng Tháng 8 - Bến xe An Sương
+52	65	Bến xe An Sương - Cách mạng Tháng 8 - Bến Thành
+53	69	Bến xe Sài Gòn - Khu dân cư Vĩnh Lộc
+54	69	Khu dân cư Vĩnh Lộc - Bến xe Sài Gòn
+55	72	Bến xe Sài Gòn - Hiệp Phước
+56	72	Hiệp Phước - Bến xe Sài Gòn
+57	72-1	Sân bay Tân Sơn Nhất - Bến xe Vũng Tàu
+58	72-1	Bến xe Vũng Tàu - Sân bay Tân Sơn Nhất
+59	75	Bến xe Sài Gòn - Cần Giờ
+60	75	Cần Giờ - Bến xe Sài Gòn
+61	88	Bến Thành - Chợ Long Phước
+62	88	Chợ Long Phước - Bến Thành
+63	91	Bến xe Miền Tây - Chợ nông sản Thủ Đức
+64	91	Chợ nông sản Thủ Đức - Bến xe Miền Tây
+65	93	Bến Thành - Bến xe Miền Đông mới
+66	93	Bến xe Miền Đông mới - Bến Thành
+67	102	Bến xe Sài Gòn - Nguyễn Văn Linh - Bến xe Miền Tây
+68	102	Bến xe Miền Tây - Nguyễn Văn Linh - Bến xe Sài Gòn
+69	109	Sân bay Tân Sơn Nhất - Bến xe Sài Gòn
+70	139	Bến xe Miền Tây - Khu tái định cư Phú Mỹ
+71	139	Khu tái định cư Phú Mỹ - Bến xe Miền Tây
+72	140	Bến xe Sài Gòn - Phạm Thế Hiển - Khu dân cư Phú Lợi
+73	140	Khu dân cư Phú Lợi - Phạm Thế Hiển - Bến xe Sài Gòn
+74	150	Bến xe Chợ Lớn - Bến xe Miền Đông mới
+75	150	Bến xe Miền Đông mới - Bến xe Chợ Lớn
+76	152	Khu dân cư Trung Sơn - Bến Thành - Sân bay Tân Sơn Nhất
+77	152	Sân bay Tân Sơn Nhất - Bến Thành - Khu dân cư Trung Sơn
+78	D4	Vinhomes Grand Park - Bến xe Sài Gòn
+79	D4	Bến xe Sài Gòn - Vinhomes Grand Park
+80	180	Vinhomes Grand Park - Trung tâm thành phố
+81	155	Ga Bến Thành (Cổng 1) - Bến Vân Đồn - Ga Nhà hát Thành phố
+82	156D	Bến Thành - Ga Hòa Hưng - Bệnh viện Mắt Thành phố Hồ Chí Minh
+83	156V	Bến Thành - Đại học Sài Gòn Cơ sở 3 - Ga Hòa Hưng
+84	159	Ga Văn Thánh - Điện Biên Phủ - Ga Tân Cảng
+85	TGC01	The Global City - Techcombank Lê Duẩn
+86	72-2B	Cảng tàu khách Vũng Tàu - Sân bay Tân Sơn Nhất
+87	72-2B	Sân bay Tân Sơn Nhất - Cảng tàu khách Vũng Tàu
+88	86	Bến Thành - Đại học Tôn Đức Thắng - Nhơn Đức
+89	86	Nhơn Đức - Đại học Tôn Đức Thắng - Bến Thành
+90		Phương Trang (Vũng Tàu - Cần Thơ)
+91	171	Bến xe Phú Chánh - Trung tâm hành chính Bình Dương - Bến Thành
+92	171	Bến Thành - Trung tâm hành chính Bình Dương - Bến xe Phú Chánh
+93	172	Bến xe Vũng Tàu - Trung tâm hành chính Bà Rịa-Vũng Tàu - Bến Thành
+94	172	Bến Thành - Trung tâm hành chính Bà Rịa-Vũng Tàu - Bến xe Vũng Tàu
+95	72-2C	Vũng Tàu - Công viên Lê Văn Tám - Sân bay Tân Sơn Nhất
+96	72-2C	Sân bay Tân Sơn Nhất - Công viên Lê Văn Tám - Vũng Tàu

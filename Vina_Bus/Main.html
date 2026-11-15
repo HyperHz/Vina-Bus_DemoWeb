@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Ban do</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    html, body, #map { height: 100%; margin: 0; }
+    #info { position: absolute; top: 10px; right: 10px; z-index: 1000; background: white;
+            padding: 8px 12px; border-radius: 6px; font: 14px sans-serif; max-width: 280px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div> 
+  <div id="info"></div>
+
+  <script>
+    //sử dụng leaflet để tạo map
+    const map = L.map("map").setView([10.7769, 106.7009], 15);   //tạo bản đồ trong thẻ div id="map", tâm ở Quận 1 (vĩ độ, kinh độ), mức zoom 15
+
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {   //lớp ảnh nền của bản đồ, tải từ OpenStreetMap theo từng ô nhỏ {z}/{x}/{y}
+      maxZoom: 19,                                                    //mức zoom lớn nhất cho phép
+      attribution: "© OpenStreetMap contributors"                     //dòng ghi nguồn ở góc dưới bản đồ (điều khoản của OSM yêu cầu phải có)
+    }).addTo(map);                                                    //gắn lớp ảnh nền vào bản đồ
+
+    //cắt nội dung file thành mảng các dòng, bỏ dòng trống
+    const dongs = t => t.split(/\r?\n/).filter(l => l.trim() !== "");   //split(/\r?\n/) tách theo xuống dòng (chịu được cả file Windows lẫn Linux); filter bỏ dòng rỗng
+
+    //================= CÁC HÀM ĐỌC FILE (nhận chữ của cả file, trả về dữ liệu) =================
+
+    //đọc A..MapNode.txt -> trả về toaDoNode[id] = [lat, lon]  (vĩ độ, kinh độ)
+    function docGraph(text) {                       //function đọc map
+      const L_ = dongs(text);                       //L_ là mảng dòng của file  ( 0 1 2 là thứ tự dòng tương ứng 1 2 3 trong file)
+      const n = Number(L_[0].split(" ")[0]);        // lấy số node cần nhập (dòng đầu của file chứa số node  và cạnh) (L_(0) là lấy dòng đầu tiên)
+      const toaDoNode = new Array(n);               //tạo mảng mới chứa dữ liệu
+      for (let i = 1; i <= n; i++) {                //vòng lặp của python chạy n lần để lấy dữ liệu node 
+        const [id, lat, lon] = L_[i].split(" ").map(Number);    //tách dòng thành id / vĩ độ / kinh độ   --- split chỉ tách thành các string  --- map(Number) biến nó thành số
+        toaDoNode[id] = [lat, lon];                 //lưu tọa độ node theo id để vẽ bằng leaflet sau đó
+      }
+      return toaDoNode;
+    }
+
+    //đọc A..DườngĐiXeBus.txt -> trả về duongBus["tuyến_trạmĐầu_trạmCuối"] = [[lat, lon], ...]  (1 block gồm tuyến, trạm đầu và cuối . trong block chứa danh sách các điểm đã đi qua )
+    function docBusRoute(text) {                    //function đọc đường đi của xe bus
+      const L_ = dongs(text), duongBus = {};
+      let i = 0;
+      while (i < L_.length) {                       //mỗi vòng đọc trọn một khối (khối dài k + 1 dòng nên không dùng for được)
+        const [r, StartId, EndId, k] = L_[i++].split(" ").map(Number);   //dòng tiêu đề: r = tuyến xe bus / StartId = trạm bắt đầu / EndId = trạm tiếp theo liền kề / k = số điểm đi qua
+        const arr = [];
+        for (let j = 0; j < k; j++) arr.push(L_[i++].split(" ").map(Number));   //đọc đúng k dòng tọa độ ngay sau dòng tiêu đề
+        duongBus[r + "_" + StartId + "_" + EndId] = arr;      //cất vào theo khóa "tuyến_trạmĐầu_trạmCuối"
+      }
+      return duongBus;
+    }
+
+    //đọc A..CácTuyếnXeBus.txt -> trả về tuyen[route_id] = { ref, name }  (số hiệu , tuyến)
+    function docRoutes(text) {                      //function đọc danh sách tuyến
+      const L_ = dongs(text);                       //L_ là mảng các dòng của file
+      const tuyen = {};                             //đối tượng rỗng: khóa là route_id, giá trị là { ref, name }
+      for (let i = 0; i < L_.length; i++) {         //mỗi dòng là một tuyến (file này không có dòng đầu nên bắt đầu từ 0)
+        const [id, ref, name] = L_[i].split("\t");  //tách theo Tab thành route_id / số hiệu tuyến / tên tuyến (tên có dấu cách nên không tách bằng " ")
+        tuyen[Number(id)] = { ref, name };          //lưu để hiện tên tuyến sau này (chỉ id mới đổi sang số, ref và name vẫn là chữ)
+      }
+      return tuyen;
+    }
+
+    //đọc A..ketqua.txt -> trả về [{ route, ids, points }]  (mỗi phần tử là một đoạn đường đi: đi bộ hoặc đi một tuyến bus)
+    //mỗi dòng của file có dạng "route_id id id id ...", route_id = -1 là đi bộ
+    function docKetQua(text, toaDoNode, duongBus) {             //cần toaDoNode (tọa độ node) và duongBus (điểm đi qua giữa hai trạm) để đổi id thành tọa độ
+      return dongs(text).map(l => {                             //mỗi dòng của file biến thành một đoạn đường
+        const [route, ...ids] = l.split(" ").map(Number);       //số đầu tiên là route_id, ...ids gom tất cả số còn lại thành một mảng id
+        let points;                                             //danh sách tọa độ [lat, lon] của đoạn này, dùng để vẽ
+        if (route === -1) {                                     //đoạn đi bộ
+          points = ids.map(id => toaDoNode[id]);                //đổi từng id node sang tọa độ
+        } else {                                                //đoạn đi bus
+          points = [toaDoNode[ids[0]]];                         //bắt đầu từ tọa độ trạm lên xe
+          for (let k = 0; k + 1 < ids.length; k++) {            //đi qua từng cặp trạm liền kề (trạm k và trạm k+1)
+            const mid = duongBus[route + "_" + ids[k] + "_" + ids[k + 1]];   //tra khóa "tuyến_trạmĐầu_trạmCuối" để lấy các điểm xe chạy giữa hai trạm
+            if (mid) points.push(...mid);                       //nếu có thì thêm các điểm đó vào (... trải mảng ra từng phần tử); thiếu thì bỏ qua
+            points.push(toaDoNode[ids[k + 1]]);                 //thêm tọa độ trạm kế tiếp
+          }
+        }
+        return { route, ids, points };                          //trả về đoạn này gồm tuyến, danh sách id, danh sách tọa độ
+      });
+    }
+
+    //================= CÁC HÀM VẼ (mỗi hàm một việc) =================
+
+    //vẽ một chấm xanh lá đánh dấu trạm xe buýt, rê chuột vào sẽ hiện nhãn
+    function veTram(toaDo, nhan) {
+      L.circleMarker(toaDo, { radius: 7, color: "green", fillColor: "green", fillOpacity: 1 })
+        .bindTooltip(nhan).addTo(map);
+    }
+
+    //vẽ đoạn đi bộ: nét đỏ cùng các chấm nhỏ trên từng node
+    function veDiBo(doan) {
+      L.polyline(doan.points, { color: "red", weight: 4 }).addTo(map);           //nét đỏ nối các điểm
+      doan.points.forEach(diem =>                                                //với từng điểm trên đường đi bộ
+        L.circleMarker(diem, { radius: 3, color: "red", fillColor: "white", fillOpacity: 1, weight: 1.5 }).addTo(map));   //chấm nhỏ: viền đỏ, ruột trắng
+      return "Đi bộ";                                                            //trả về chữ để ghi vào tóm tắt lộ trình
+    }
+
+    //vẽ đoạn đi xe buýt: nét xanh dương cùng trạm lên và trạm xuống
+    function veXeBuyt(doan, tuyen, toaDoNode) {
+      const tuyenXe = tuyen[doan.route] || { ref: doan.route, name: "" };        //số hiệu và tên tuyến; không có trong file tuyến thì dùng tạm route_id
+      const tramLen = doan.ids[0], tramXuong = doan.ids[doan.ids.length - 1];    //trạm đầu và trạm cuối của đoạn
+      const soChang = doan.ids.length - 1;                                       //số chặng = số trạm trừ 1
+
+      L.polyline(doan.points, { color: "blue", weight: 5 })                      //nét xanh dương nối các điểm xe chạy
+        .bindTooltip("Tuyến " + tuyenXe.ref + ": " + tuyenXe.name).addTo(map);   //rê chuột vào hiện số hiệu và tên tuyến
+      veTram(toaDoNode[tramLen], "Lên xe tuyến " + tuyenXe.ref + " (trạm " + tramLen + ")");
+      veTram(toaDoNode[tramXuong], "Xuống xe (trạm " + tramXuong + ")");
+      return "Xe buýt " + tuyenXe.ref + " (" + soChang + " chặng)";
+    }
+
+    //================= HÀM CHẠY CHÍNH =================
+
+    //tải dữ liệu, đọc, rồi vẽ lên bản đồ
+    async function nap() {                                      //async để dùng được await (chờ tải file xong mới chạy tiếp)
+      const get = async f => (await fetch(f)).text();           //get: gửi yêu cầu lấy file f rồi trả về nội dung của nó dưới dạng chữ
+      const [chuMapNode, chuDuongBus, chuTuyen, chuKetQua] = await Promise.all(   //tải cả 4 file cùng lúc, chờ đủ cả 4 rồi mới đi tiếp
+        ["data/A..MapNode.txt", "data/A..DườngĐiXeBus.txt", "data/A..CácTuyếnXeBus.txt", "data/A..ketqua.txt"].map(get));
+
+      const toaDoNode = docGraph(chuMapNode);                   //chữ của file node -> tọa độ các node
+      const duongBus = docBusRoute(chuDuongBus);                //chữ của file đường bus -> điểm đi qua giữa hai trạm
+      const tuyen = docRoutes(chuTuyen);                        //chữ của file tuyến -> số hiệu và tên tuyến
+      const doanDuong = docKetQua(chuKetQua, toaDoNode, duongBus);   //chữ của file kết quả -> các đoạn đường cần vẽ
+
+      const moiToaDo = [], tomTat = [];                         //moiToaDo: gom mọi tọa độ để zoom vừa khít; tomTat: chữ tóm tắt lộ trình hiện ở góc phải
+
+      doanDuong.forEach(doan => {                               //duyệt từng đoạn của lộ trình theo thứ tự
+        moiToaDo.push(...doan.points);                          //thêm tọa độ của đoạn này vào danh sách chung
+        tomTat.push(doan.route === -1 ? veDiBo(doan) : veXeBuyt(doan, tuyen, toaDoNode));   //route = -1 là đi bộ, còn lại là đi xe buýt; hàm vẽ trả về chữ tóm tắt
+      });
+
+      // Tạm thời: điểm đầu và điểm cuối chính là node đi bộ có sẵn
+      const doanCuoi = doanDuong[doanDuong.length - 1];         //đoạn cuối cùng của lộ trình
+      const diemDau = doanDuong[0].ids[0];                      //node đầu tiên của đoạn đầu tiên
+      const diemCuoi = doanCuoi.ids[doanCuoi.ids.length - 1];   //node cuối cùng của đoạn cuối cùng
+      L.circleMarker(toaDoNode[diemDau], { radius: 9, color: "black", fillColor: "gold", fillOpacity: 1 })   //chấm vàng đánh dấu điểm xuất phát
+        .bindTooltip("Xuất phát (node " + diemDau + ")", { permanent: true, direction: "top" }).addTo(map);   //permanent: nhãn luôn hiện, không cần rê chuột
+      L.circleMarker(toaDoNode[diemCuoi], { radius: 9, color: "black", fillColor: "orange", fillOpacity: 1 })   //chấm cam đánh dấu đích
+        .bindTooltip("Đích (node " + diemCuoi + ")", { permanent: true, direction: "top" }).addTo(map);
+
+      document.getElementById("info").innerHTML = tomTat.join(" → ");   //ghi tóm tắt lộ trình vào khung góc phải, nối các phần bằng mũi tên
+      map.fitBounds(L.latLngBounds(moiToaDo));                  //thu phóng bản đồ vừa khít với toàn bộ đường đi
+    }
+
+    nap();                                                      //chạy hàm chính khi mở trang
+  </script>
+</body>
+
+</html>
