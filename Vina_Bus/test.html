@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Ban do</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    html, body, #map { height: 100%; margin: 0; }
+    #info { position: absolute; top: 10px; right: 10px; z-index: 1000; background: white;
+            padding: 8px 12px; border-radius: 6px; font: 14px sans-serif; max-width: 280px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="info"></div>
+
+  <script>
+              //sử dụng leaflet để tạo map
+    const map = L.map("map").setView([10.7769, 106.7009], 15);
+
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "© OpenStreetMap contributors"
+    }).addTo(map);
+
+    const dongs = t => t.split(/\r?\n/).filter(l => l.trim() !== "");
+
+    //đọc  A..MapNode.txt -> trả về pts[id] = [lat, lon]  (hay kinh độ / vĩ độ)
+    function docGraph(text) {                       //function đọc map
+      const L_ = dongs(text);                       //L_ là mảng dòng của file  ( 0 1 2 là thứ tự dòng tương ứng 1 2 3 trong file)
+      const n = Number(L_[0].split(" ")[0]);        // lấy số node cần nhập (dòng đầu của file chứa số node  và cạnh) (L_(0) là lấy dòng đầu tiên)
+      const pts = new Array(n);                     // tạo mảng mới chứa dữ liệu.
+      for (let i = 1; i <= n; i++) {                //vòng lặp của python chạy n lần để đọc dữ liệu đỉnh
+        const [id, lat, lon] = L_[i].split(" ").map(Number);    // đưa từng dữ liệu vào id/ kinh độ / vĩ độ   --- split chỉ tách thành các string  --- map(number) biến nó thành số
+        pts[id] = [lat, lon];                       // lưu tọa độ node vào pts để hiển thị bằng leaflet sau đó
+      }
+      return pts;
+    }
+
+    // đọc A..DườngĐiXeBus.txt -> trả về blocks["route_a_b"] = [[lat, lon], ...] (1 block gồm tuyến, trạm đầu và cuối . trong block chứa danh sách các điểm đã đi qua )
+    function docBusRoute(text) {                                        //function đọc danh sách tuyến
+      const L_ = dongs(text), blocks = {};                              //L_ là mảng dòng của file
+      let i = 0;                                                          
+      while (i < L_.length) {                                           //khi chưa chạy hết các node đường đi của xe bus thì lập lại
+        const [r, StartId, EndId, k] = L_[i++].split(" ").map(Number); // đưa từng dữ liệu vào r=tuyến xe bus/ StartId = trạm bắt đầu / EndId = trạm tiếp theo liền kề/ K số node đường đi qua    --- split chỉ tách thành các string  --- map(number) biến nó thành số
+        const arr = [];
+        for (let j = 0; j < k; j++) arr.push(L_[i++].split(" ").map(Number));
+        blocks[r + "_" + StartId + "_" + EndId] = arr;
+      }
+      return blocks;
+    }
+
+    // đọc A..CácTuyếnXeBus.txt -> trả về routes[route_id] = { ref, name } (số hiệu , tên tuyến)
+    function docRoutes(text) {
+      const routes = {};
+      const L_ =  dongs(text);                      //L_ là mảng dòng của file 
+      for (let i = 0; i < L_.length; i++) {         //mỗi dòng là một tuyến (file này không có dòng đầu nên bắt đầu từ 0)
+        const [id, ref, name] = L_[i].split("\t");  //tách theo Tab thành route_id / số hiệu tuyến / tên tuyến (tên có dấu cách nên không tách bằng " ")
+        routes[Number(id)] = { ref, name };         //lưu lại để hiện tên tuyến sau này (chỉ id mới đổi sang số, ref và name vẫn là chữ)
+      }
+      return routes;
+    }
+    
+
+    // ketqua.txt: mỗi dòng "route_id id id id ...", route_id = -1 là đi bộ
+    // -> [{ route, ids, points }]
+    function docKetQua(text, pts, blocks) {
+      return dongs(text).map(l => {
+        const [route, ...ids] = l.split(" ").map(Number);
+        let points;
+        if (route === -1) {
+          points = ids.map(id => pts[id]);
+        } else {
+          // các id là trạm; giữa hai trạm lấy điểm trung gian từ bus_route.txt
+          points = [pts[ids[0]]];
+          for (let k = 0; k + 1 < ids.length; k++) {
+            const mid = blocks[route + "_" + ids[k] + "_" + ids[k + 1]];
+            if (mid) points.push(...mid);
+            points.push(pts[ids[k + 1]]);
+          }
+        }
+        return { route, ids, points };
+      });
+    }
+
+    async function nap() {
+      const get = async f => (await fetch(f)).text();
+      const [gt, bt, rt, kt] = await Promise.all(
+        ["data/A..MapNode.txt", "data/A..DườngĐiXeBus.txt", "data/A..CácTuyếnXeBus.txt", "data/A..ketqua.txt"].map(get));
+
+      const pts = docGraph(gt);
+      const blocks = docBusRoute(bt);
+      const routes = docRoutes(rt);
+      const segs = docKetQua(kt, pts, blocks);
+
+      const all = [], info = [];
+
+      segs.forEach(seg => {
+        all.push(...seg.points);
+
+        if (seg.route === -1) {
+          // Đi bộ: nét đỏ + các nút trên đường đi
+          L.polyline(seg.points, { color: "red", weight: 4 }).addTo(map);
+          seg.points.forEach(p => {
+            L.circleMarker(p, { radius: 3, color: "red", fillColor: "white", fillOpacity: 1, weight: 1.5 }).addTo(map);
+          });
+          info.push("Đi bộ");
+        } else {
+          // Đi xe buýt: nét xanh từ trạm này đến trạm kia
+          const r = routes[seg.route] || { ref: seg.route, name: "" };
+          L.polyline(seg.points, { color: "blue", weight: 5 })
+            .bindTooltip("Tuyến " + r.ref + ": " + r.name)
+            .addTo(map);
+
+          // Trạm lên xe và trạm xuống xe: xanh lá
+          const lenXe = seg.ids[0], xuongXe = seg.ids[seg.ids.length - 1];
+          L.circleMarker(pts[lenXe], { radius: 7, color: "green", fillColor: "green", fillOpacity: 1 })
+            .bindTooltip("Lên xe tuyến " + r.ref + " (trạm " + lenXe + ")").addTo(map);
+          L.circleMarker(pts[xuongXe], { radius: 7, color: "green", fillColor: "green", fillOpacity: 1 })
+            .bindTooltip("Xuống xe (trạm " + xuongXe + ")").addTo(map);
+          info.push("Xe buýt " + r.ref + " (" + (seg.ids.length - 1) + " chặng)");
+        }
+      });
+
+      // Tạm thời: điểm đầu và điểm cuối chính là node đi bộ có sẵn
+      const start = segs[0].ids[0];
+      const end = segs[segs.length - 1].ids[segs[segs.length - 1].ids.length - 1];
+      L.circleMarker(pts[start], { radius: 9, color: "black", fillColor: "gold", fillOpacity: 1 })
+        .bindTooltip("Xuất phát (node " + start + ")", { permanent: true, direction: "top" }).addTo(map);
+      L.circleMarker(pts[end], { radius: 9, color: "black", fillColor: "orange", fillOpacity: 1 })
+        .bindTooltip("Đích (node " + end + ")", { permanent: true, direction: "top" }).addTo(map);
+
+      document.getElementById("info").innerHTML = info.join(" → ");
+      map.fitBounds(L.latLngBounds(all));
+    }
+
+    nap();
+  </script>
+</body>
+</html>
